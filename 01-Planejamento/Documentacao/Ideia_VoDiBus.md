@@ -1,0 +1,1 @@
+“O VoDiBus ajuda usuários do transporte público a descobrir rapidamente qual ônibus pegar e qual rota seguir para chegar ao destino.”

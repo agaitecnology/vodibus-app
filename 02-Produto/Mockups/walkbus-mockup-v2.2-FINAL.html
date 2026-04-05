@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WalkBus v2.2 - Aprovado GPT + Grok</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px;
+            animation: fadeIn 0.3s;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.1; }
+        }
+
+        /* BOTÃO VOZ FLUTUANTE (TODAS AS TELAS) */
+        .voice-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 24px;
+            font-size: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .voice-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .menu-button {
+            width: 44px;
+            height: 44px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .card-label {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007AFF;
+        }
+
+        .card-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        /* Input */
+        input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 24px;
+            font-weight: 600;
+            padding: 0;
+            outline: none;
+            color: #1a1a1a;
+        }
+
+        input::placeholder {
+            color: #ccc;
+        }
+
+        /* Botões */
+        .btn-primary {
+            width: 100%;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 24px;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            background: #0066d6;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:active {
+            background: #f5f5f5;
+        }
+
+        /* Grid de botões */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-label {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        /* Tela de Resultados */
+        .back-btn {
+            font-size: 18px;
+            color: #007AFF;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .results-header {
+            margin-bottom: 20px;
+        }
+
+        .results-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .results-subtitle {
+            font-size: 20px;
+            color: #333;
+        }
+
+        /* Route Card */
+        .route-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 12px;
+            border: 2px solid #007AFF;
+            position: relative;
+        }
+
+        .badge {
+            position: absolute;
+            top: -12px;
+            right: 12px;
+            background: #007AFF;
+            color: white;
+            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .route-time {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .route-time-label {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .route-steps {
+            border-top: 1px solid #f0f0f0;
+            padding-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .route-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .step-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            flex-shrink: 0;
+        }
+
+        .step-icon.bus {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #34C759;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .step-text {
+            font-size: 20px;
+            line-height: 1.4;
+        }
+
+        .info-badge {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .btn-route {
+            width: 100%;
+            background: #34C759;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 24px;
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin-top: 24px;
+        }
+
+        /* OCR Confirmation Screen */
+        .ocr-box {
+            background: #F0F9FF;
+            border: 3px solid #007AFF;
+            border-radius: 20px;
+            padding: 32px;
+            margin: 40px 0;
+        }
+
+        .ocr-label {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .ocr-text {
+            font-size: 36px;
+            font-weight: 700;
+            color: #007AFF;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .btn-huge {
+            height: 90px;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        /* Trip Screen - Countdown */
+        .countdown-container {
+            background: #34C759;
+            padding: 60px 20px;
+            text-align: center;
+            margin: -20px -20px 20px -20px;
+            color: white;
+        }
+
+        .countdown-container.alert {
+            background: #FF3B30;
+        }
+
+        .countdown-number {
+            font-size: 140px;
+            font-weight: 900;
+            line-height: 1;
+            margin: 20px 0;
+        }
+
+        .countdown-label {
+            font-size: 36px;
+            font-weight: 600;
+        }
+
+        .countdown-text {
+            font-size: 28px;
+            margin-top: 16px;
+        }
+
+        /* Menu Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            width: 100%;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .menu-item {
+            padding: 24px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-item:active {
+            background: #f5f5f5;
+        }
+
+        .gps-pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- TELA 1: Inicial -->
+    <div id="screen-home" class="screen active">
+        <div class="header">
+            <div class="logo">WalkBus</div>
+            <button class="menu-button" onclick="showMenu()">⋮</button>
+        </div>
+
+        <div class="card">
+            <div class="card-label">De onde?</div>
+            <div class="card-value">
+                <div class="location-dot"></div>
+                Você está aqui
+            </div>
+            <div class="card-subtitle">Rua Bernardino de Campos, 2491</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Para onde?</div>
+            <input type="text" placeholder="Digite ou fale o destino" id="destination-input">
+        </div>
+
+        <button class="btn-primary" onclick="showCamera()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="7" width="18" height="13" rx="2"/>
+                <circle cx="12" cy="13" r="3"/>
+                <path d="M9 7L10 4H14L15 7"/>
+            </svg>
+            Fotografe o endereço que está no papel
+        </button>
+
+        <div class="section-label">Destinos frequentes</div>
+
+        <div class="button-grid">
+            <button class="btn-secondary" onclick="selectDestination('Hospital de Base')">🏥 Hospital de Base</button>
+            <button class="btn-secondary" onclick="selectDestination('Shopping Iguatemi')">🛍️ Shopping Iguatemi</button>
+            <button class="btn-secondary" onclick="selectDestination('Terminal Central')">🚌 Terminal Central</button>
+            <button class="btn-secondary" onclick="selectDestination('Casa')">🏠 Casa</button>
+        </div>
+
+        <div class="footer-text">Versão 2.2 • Modo Simples ativo</div>
+
+        <button class="voice-button" onclick="speakScreen('home')">
+            🔊 Ler em voz alta
+        </button>
+    </div>
+
+    <!-- TELA 2: Confirmação OCR -->
+    <div id="screen-ocr" class="screen">
+        <div class="back-btn" onclick="showScreen('screen-home')">← Voltar</div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">📷</div>
+            <h2 style="font-size: 28px; font-weight: 600; margin-bottom: 40px;">Texto lido da foto:</h2>
+        </div>
+
+        <div class="ocr-box">
+            <div class="ocr-text" id="ocr-result">
+                🏥 Hospital de Base<br>
+                Rua Alberto Andaló, 1500
+            </div>
+        </div>
+
+        <button class="btn-primary btn-huge" onclick="confirmOCR()">
+            ✅ Sim, usar esse endereço
+        </button>
+
+        <button class="btn-primary btn-huge" style="background: #666;" onclick="showScreen('screen-home')">
+            ✏️ Corrigir
+        </button>
+
+        <button class="voice-button" onclick="speakOCRResult()">
+            🔊 Ler endereço
+        </button>
+    </div>
+
+    <!-- TELA 3: Resultados (1 ROTA SÓ) -->
+    <div id="screen-results" class="screen">
+        <div class="back-btn" onclick="showScreen('screen-home')">← Voltar</div>
+
+        <div class="results-header">
+            <div class="results-title">Melhor rota encontrada</div>
+            <div class="results-subtitle" id="route-subtitle">De Casa → Hospital de Base</div>
+        </div>
+
+        <div class="route-card">
+            <div class="badge">MAIS RÁPIDA</div>
+            
+            <div class="route-time">35 min</div>
+            <div class="route-time-label">tempo total</div>
+
+            <div class="route-steps">
+                <div class="route-step" onclick="showWalkingDirections()">
+                    <div class="step-icon"></div>
+                    <div>
+                        <div class="step-text">Caminhe 5 min até Rua Voluntários</div>
+                        <div style="font-size: 18px; color: #007AFF; margin-top: 6px; cursor: pointer;">👉 Ver como chegar no ponto</div>
+                    </div>
+                </div>
+                <div class="route-step">
+                    <div class="step-icon bus">305</div>
+                    <div class="step-text">Linha 305 - Av. José Munia (22 min)</div>
+                </div>
+                <div class="route-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Caminhe 8 min até o destino</div>
+                </div>
+            </div>
+
+            <div class="info-badge">✓ Sem integração necessária • R$ 5,00</div>
+
+            <button class="btn-route" onclick="startTrip()">Me leva lá</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="#" style="font-size: 18px; color: #007AFF; text-decoration: none;">Ver outras opções (2 rotas)</a>
+        </div>
+
+        <button class="voice-button" onclick="speakScreen('results')">
+            🔊 Ler rota
+        </button>
+    </div>
+
+    <!-- TELA 4: Instruções de Caminhada -->
+    <div id="screen-walking" class="screen">
+        <div class="back-btn" onclick="showScreen('screen-results')">← Voltar</div>
+
+        <div class="results-header">
+            <div class="results-title">Como chegar no ponto</div>
+            <div class="results-subtitle">Ponto de ônibus 305 - Rua Voluntários</div>
+        </div>
+
+        <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative; height: 220px;">
+            <div style="position: absolute; top: 30px; left: 30px; width: 14px; height: 14px; border-radius: 50%; background: #007AFF; border: 3px solid white; box-shadow: 0 0 8px rgba(0,122,255,0.5); z-index: 10;"></div>
+            <div style="position: absolute; top: 30px; left: 50px; font-size: 16px; font-weight: 600;">Você está aqui</div>
+            
+            <svg style="position: absolute; top: 40px; left: 40px; width: calc(100% - 60px); height: 140px;">
+                <path d="M 0,0 Q 40,10 70,40 T 140,80 T 200,120" 
+                      stroke="#007AFF" 
+                      stroke-width="4" 
+                      fill="none" 
+                      stroke-dasharray="10,5"
+                      stroke-linecap="round"/>
+            </svg>
+            
+            <div style="position: absolute; bottom: 30px; right: 30px; width: 40px; height: 40px; background: #34C759; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 16px; box-shadow: 0 2px 8px rgba(52,199,89,0.4);">
+                305
+            </div>
+        </div>
+
+        <div class="card" style="background: #F0F9FF; border: 2px solid #007AFF;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 32px; font-weight: 600; color: #007AFF;">400 metros</div>
+                    <div style="font-size: 18px; color: #333; margin-top: 6px;">Uns 5 minutos caminhando</div>
+                </div>
+                <div style="font-size: 48px;">🚶</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="font-weight: 600; margin-bottom: 20px; font-size: 20px;">Siga estas instruções:</div>
+            
+            <div style="display: flex; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #007AFF; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; font-size: 18px;">1</div>
+                <div>
+                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">Vire à direita ao sair</div>
+                    <div style="font-size: 18px; color: #333;">Siga pela Rua Bernardino de Campos</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #007AFF; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; font-size: 18px;">2</div>
+                <div>
+                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">Ande uns 200 metros</div>
+                    <div style="font-size: 18px; color: #333;">Até o semáforo (2 minutos)</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #007AFF; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; font-size: 18px;">3</div>
+                <div>
+                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">Vire à esquerda</div>
+                    <div style="font-size: 18px; color: #333;">Entre na Rua Voluntários de São Paulo</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 14px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #34C759; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; font-size: 18px;">✓</div>
+                <div>
+                    <div style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">O ponto está à sua frente</div>
+                    <div style="font-size: 18px; color: #333;">Do lado esquerdo, depois da padaria</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="startNavigation()">
+            🧭 Começar navegação guiada
+        </button>
+
+        <button class="btn-primary" onclick="showScreen('screen-trip')" style="background: #34C759;">
+            Já estou no ponto, avançar
+        </button>
+
+        <button class="voice-button" onclick="speakScreen('walking')">
+            🔊 Ler instruções
+        </button>
+    </div>
+
+    <!-- TELA 5: Navegação Guiada -->
+    <div id="screen-navigation" class="screen">
+        <div style="position: relative; height: 65vh; background: linear-gradient(to bottom, #E8F4F8 0%, #D4E9F3 100%); border-radius: 0 0 24px 24px; margin: -20px -20px 20px -20px; overflow: hidden;">
+            
+            <div style="width: 100%; height: 100%; position: relative; overflow: hidden;">
+                <svg style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                    <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#C0C0C0" stroke-width="50" />
+                    <line x1="0" y1="60%" x2="100%" y2="60%" stroke="#C0C0C0" stroke-width="35" />
+                    <line x1="50%" y1="0" x2="50%" y2="100%" stroke="white" stroke-width="3" stroke-dasharray="15,10" opacity="0.6" />
+                    <line x1="0" y1="60%" x2="100%" y2="60%" stroke="white" stroke-width="3" stroke-dasharray="15,10" opacity="0.6" />
+                </svg>
+
+                <svg style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5;">
+                    <path d="M 50%,85% L 50%,60% L 75%,60%" 
+                          stroke="#007AFF" 
+                          stroke-width="8" 
+                          fill="none" 
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          style="filter: drop-shadow(0 3px 6px rgba(0,122,255,0.4));" />
+                </svg>
+
+                <div style="position: absolute; top: 60%; right: 25%; transform: translate(50%, -50%); z-index: 15;">
+                    <div style="width: 52px; height: 52px; background: #34C759; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(52,199,89,0.5); border: 5px solid white;">
+                        <span style="font-size: 22px;">🚏</span>
+                    </div>
+                    <div style="margin-top: 6px; background: white; padding: 6px 10px; border-radius: 8px; font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,0.15); text-align: center;">
+                        Ponto 305
+                    </div>
+                </div>
+
+                <div style="position: absolute; top: 85%; left: 50%; transform: translate(-50%, -50%); z-index: 20;">
+                    <div class="gps-pulse" style="width: 90px; height: 90px; background: rgba(0,122,255,0.15); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                    
+                    <div style="width: 24px; height: 24px; background: #007AFF; border-radius: 50%; border: 5px solid white; box-shadow: 0 3px 10px rgba(0,122,255,0.6); position: relative; z-index: 10;">
+                        <div style="position: absolute; top: -42px; left: 50%; transform: translateX(-50%);">
+                            <div style="font-size: 40px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); line-height: 1;">
+                                ⬆️
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="position: absolute; top: 48%; left: 28%; font-size: 13px; background: rgba(255,255,255,0.95); padding: 5px 10px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600;">
+                    🥖 Padaria
+                </div>
+                <div style="position: absolute; top: 73%; right: 43%; font-size: 13px; background: rgba(255,255,255,0.95); padding: 5px 10px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600;">
+                    🚦 Semáforo
+                </div>
+            </div>
+
+            <button onclick="showScreen('screen-walking')" style="position: absolute; top: 45px; left: 20px; width: 44px; height: 44px; border-radius: 50%; background: white; border: none; box-shadow: 0 3px 10px rgba(0,0,0,0.2); font-size: 20px; cursor: pointer; z-index: 100; font-weight: 600; color: #007AFF;">
+                ←
+            </button>
+
+            <div style="position: absolute; bottom: 24px; left: 20px; right: 20px; background: white; border-radius: 20px; padding: 28px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); z-index: 30;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="width: 68px; height: 68px; background: #007AFF; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">
+                        <span style="font-size: 42px;">↗️</span>
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <div style="font-size: 18px; color: #333; margin-bottom: 6px;">Em 120 metros</div>
+                        <div style="font-size: 26px; font-weight: 700; line-height: 1.2; color: #1a1a1a;">Vire à esquerda</div>
+                        <div style="font-size: 18px; color: #333; margin-top: 6px;">na Rua Voluntários</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #F0F9FF; border: 2px solid #007AFF; border-radius: 18px; padding: 24px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 18px; color: #333; margin-bottom: 8px;">Faltam para o ponto</div>
+                    <div style="font-size: 40px; font-weight: 700; color: #007AFF;">150 metros</div>
+                    <div style="font-size: 18px; color: #333; margin-top: 6px;">Uns 2 minutos</div>
+                </div>
+                <div style="font-size: 56px;">🚶</div>
+            </div>
+        </div>
+
+        <div class="card" style="background: #FFF8E1; border: 2px solid #FFA726;">
+            <div style="font-size: 18px; color: #E65100; margin-bottom: 6px; font-weight: 600;">Depois disso:</div>
+            <div style="font-size: 20px; font-weight: 600; color: #E65100;">O ponto está do lado esquerdo</div>
+            <div style="font-size: 18px; color: #E65100; margin-top: 6px;">Depois da padaria</div>
+        </div>
+
+        <button class="voice-button" onclick="speakNavigation()">
+            🔊 Repetir instrução
+        </button>
+    </div>
+
+    <!-- TELA 6: Durante a Viagem (COM CONTAGEM) -->
+    <div id="screen-trip" class="screen">
+        <div class="countdown-container" id="countdown">
+            <div style="font-size: 32px; font-weight: 700; margin-bottom: 20px;">✓ Você está no ônibus</div>
+            
+            <div class="countdown-number" id="stops-number">5</div>
+            
+            <div class="countdown-label">paradas</div>
+            
+            <div class="countdown-text">até você descer</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Próxima parada:</div>
+            <div style="font-size: 24px; font-weight: 600; margin-top: 8px;">Rua XV de Novembro</div>
+        </div>
+
+        <div class="card" style="background: #FFF8E1; border: 2px solid #FFA726;">
+            <div style="font-size: 18px; color: #E65100; font-weight: 600; margin-bottom: 8px;">💡 Fique atento</div>
+            <div style="font-size: 20px; color: #E65100;">Vamos avisar quando estiver perto da sua parada</div>
+        </div>
+
+        <button class="btn-primary" style="background: #FF3B30; margin-top: 20px;">
+            Cancelar viagem
+        </button>
+
+        <button class="voice-button" onclick="speakTrip()">
+            🔊 Repetir aviso
+        </button>
+    </div>
+
+    <!-- MENU MODAL -->
+    <div id="menu-modal" class="modal" onclick="hideMenu()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="font-size: 24px; font-weight: 600; padding: 20px; border-bottom: 2px solid #f0f0f0;">
+                Opções
+            </div>
+            <div class="menu-item" onclick="switchMode()">
+                <span style="font-size: 28px;">⚡</span>
+                <span>Modo Rápido</span>
+            </div>
+            <div class="menu-item" onclick="increaseFontSize()">
+                <span style="font-size: 28px;">🔍</span>
+                <span>Aumentar tela</span>
+            </div>
+            <div class="menu-item" onclick="showHelp()">
+                <span style="font-size: 28px;">❓</span>
+                <span>Ajuda</span>
+            </div>
+            <div class="menu-item" onclick="hideMenu()">
+                <span style="font-size: 28px;">✕</span>
+                <span>Fechar</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CÂMERA -->
+    <div id="camera-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;">
+        <div style="font-size: 80px; margin-bottom: 30px;">📷</div>
+        <div style="font-size: 32px; font-weight: 600; margin-bottom: 20px;">Aponte para o endereço</div>
+        <div style="font-size: 20px; margin-bottom: 50px; opacity: 0.8; text-align: center; max-width: 300px;">O app vai ler automaticamente o texto do papel</div>
+        <button onclick="simulateOCR()" style="background: white; color: black; border: none; border-radius: 14px; padding: 20px 50px; font-size: 22px; font-weight: 600; cursor: pointer;">Fechar</button>
+    </div>
+
+    <script>
+        let currentDestination = '';
+        let stopsRemaining = 5;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectDestination(dest) {
+            currentDestination = dest;
+            document.getElementById('route-subtitle').textContent = `De Casa → ${dest}`;
+            showScreen('screen-results');
+        }
+
+        function showCamera() {
+            document.getElementById('camera-modal').style.display = 'flex';
+        }
+
+        function simulateOCR() {
+            document.getElementById('camera-modal').style.display = 'none';
+            setTimeout(() => {
+                showScreen('screen-ocr');
+            }, 300);
+        }
+
+        function confirmOCR() {
+            selectDestination('Hospital de Base');
+        }
+
+        function startTrip() {
+            showScreen('screen-trip');
+            startCountdown();
+        }
+
+        function showWalkingDirections() {
+            showScreen('screen-walking');
+        }
+
+        function startNavigation() {
+            showScreen('screen-navigation');
+        }
+
+        function showMenu() {
+            document.getElementById('menu-modal').classList.add('active');
+        }
+
+        function hideMenu() {
+            document.getElementById('menu-modal').classList.remove('active');
+        }
+
+        function switchMode() {
+            alert('Modo Rápido em breve!');
+            hideMenu();
+        }
+
+        function increaseFontSize() {
+            alert('Função "Aumentar tela" em breve!');
+            hideMenu();
+        }
+
+        function showHelp() {
+            alert('Ajuda em breve!');
+            hideMenu();
+        }
+
+        function startCountdown() {
+            setInterval(() => {
+                if (stopsRemaining > 0) {
+                    stopsRemaining--;
+                    document.getElementById('stops-number').textContent = stopsRemaining;
+                    
+                    if (stopsRemaining <= 1) {
+                        const countdown = document.getElementById('countdown');
+                        countdown.classList.add('alert');
+                        countdown.querySelector('.countdown-label').textContent = 'parada';
+                        countdown.querySelector('.countdown-text').innerHTML = '<strong style="font-size: 36px;">⚠️ DESÇA NA PRÓXIMA!</strong>';
+                        countdown.querySelector('div:first-child').textContent = '⚠️ ATENÇÃO!';
+                    }
+                }
+            }, 30000);
+        }
+
+        // Funções de voz (Text-to-Speech simulado)
+        function speakScreen(screen) {
+            alert(`🔊 Lendo tela em voz alta: ${screen}\n\n(Função de voz será implementada com Flutter TTS)`);
+        }
+
+        function speakOCRResult() {
+            const text = document.getElementById('ocr-result').innerText;
+            alert(`🔊 Lendo: ${text}\n\n(Função de voz será implementada com Flutter TTS)`);
+        }
+
+        function speakNavigation() {
+            alert('🔊 "Vire à esquerda em 120 metros na Rua Voluntários"\n\n(Função de voz será implementada com Flutter TTS)');
+        }
+
+        function speakTrip() {
+            alert(`🔊 "Faltam ${stopsRemaining} paradas até você descer"\n\n(Função de voz será implementada com Flutter TTS)`);
+        }
+
+        document.getElementById('destination-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                selectDestination(this.value);
+            }
+        });
+
+        console.log('WalkBus Mockup v2.2 Final - Aprovado GPT + Grok - Carregado!');
+    </script>
+</body>
+</html>

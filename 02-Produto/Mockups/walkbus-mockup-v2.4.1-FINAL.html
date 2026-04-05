@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WalkBus v2.4 - Humanizado e Confiável</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px;
+            animation: fadeIn 0.3s;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.1; }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* MENSAGEM DE BOAS-VINDAS (NOVO v2.4) */
+        .welcome-message {
+            background: linear-gradient(135deg, #007AFF 0%, #0066D6 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 20px;
+            margin: -20px -20px 20px -20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        }
+
+        .welcome-text {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtext {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        /* BOTÃO VOZ FLUTUANTE (MAIOR v2.4) */
+        .voice-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 20px 28px;
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: 0 6px 20px rgba(0,122,255,0.5);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .voice-button:active {
+            transform: scale(0.95);
+        }
+
+        .voice-button-icon {
+            font-size: 28px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .mode-badge {
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .menu-button {
+            width: 44px;
+            height: 44px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .card.gps-active {
+            border: 2px solid #007AFF;
+            box-shadow: 0 2px 8px rgba(0,122,255,0.15);
+        }
+
+        .card-label {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 26px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007AFF;
+            animation: pulse 2s infinite;
+        }
+
+        .card-subtitle {
+            font-size: 20px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        /* Input com Microfone (AJUSTADO v2.4.1) */
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            font-weight: 600;
+            padding: 0;
+            outline: none;
+            color: #1a1a1a;
+            min-width: 0;
+        }
+
+        input::placeholder {
+            color: #ccc;
+        }
+
+        .mic-button {
+            width: 44px;
+            height: 44px;
+            background: #007AFF;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,122,255,0.3);
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007AFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 26px;
+            font-weight: 600;
+            color: #007AFF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Botões */
+        .btn-primary {
+            width: 100%;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 24px;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            background: #0066d6;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 22px;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:active {
+            background: #f5f5f5;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .section-label {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin-top: 24px;
+        }
+
+        /* OCR Confirmation Screen (REFORÇADO v2.4) */
+        .ocr-header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+
+        .ocr-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .ocr-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .ocr-subtitle {
+            font-size: 20px;
+            color: #666;
+        }
+
+        .ocr-box {
+            background: #F0F9FF;
+            border: 4px solid #007AFF;
+            border-radius: 24px;
+            padding: 40px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .ocr-text {
+            font-size: 36px;
+            font-weight: 700;
+            color: #007AFF;
+            line-height: 1.4;
+        }
+
+        .btn-huge {
+            height: 90px;
+            font-size: 28px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+        }
+
+        .btn-confirm {
+            background: #34C759;
+        }
+
+        .btn-confirm:active {
+            background: #2E7D32;
+        }
+
+        .btn-edit {
+            background: #666;
+        }
+
+        .btn-edit:active {
+            background: #555;
+        }
+
+        /* Confidence Messages (NOVO v2.4) */
+        .confidence-badge {
+            background: #E8F5E9;
+            border: 2px solid #34C759;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .confidence-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2E7D32;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .confidence-icon {
+            font-size: 28px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #34C759;
+            color: white;
+            padding: 18px 28px;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        /* Back Button */
+        .back-btn {
+            font-size: 20px;
+            color: #007AFF;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Camera Modal */
+        .camera-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 3000;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 0; }
+            50% { top: calc(100% - 3px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">✓ Localização encontrada!</div>
+
+    <!-- TELA 1: Inicial (COM BOAS-VINDAS v2.4) -->
+    <div id="screen-home" class="screen active">
+        <!-- BOAS-VINDAS HUMANIZADA (NOVO) -->
+        <div class="welcome-message">
+            <div class="welcome-text">Oi! Para onde você quer ir hoje?</div>
+            <div class="welcome-subtext">Vamos te ajudar a chegar lá 😊</div>
+        </div>
+
+        <div class="header">
+            <div class="logo">WalkBus</div>
+            <div class="mode-badge">✓ Modo Simples ativo</div>
+        </div>
+
+        <!-- GPS ATIVO -->
+        <div class="card gps-active" id="origin-card">
+            <div id="gps-loading" style="display: none;">
+                <div class="loading-text">
+                    <div class="loading-spinner"></div>
+                    Localizando você...
+                </div>
+            </div>
+
+            <div id="gps-ready">
+                <div class="card-value">
+                    <div class="location-dot"></div>
+                    Você está aqui
+                </div>
+                <div class="card-subtitle">Rua Bernardino de Campos, 2491</div>
+            </div>
+        </div>
+
+        <!-- DESTINO COM MICROFONE (AJUSTADO v2.4.1) -->
+        <div class="card">
+            <div class="card-label">Para onde você quer ir?</div>
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    placeholder="Digite o destino" 
+                    id="destination-input"
+                    autocomplete="off"
+                    style="font-size: 24px;"
+                >
+                <button class="mic-button" onclick="activateVoiceInput()" title="Falar o destino">
+                    🎤
+                </button>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="showCamera()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="7" width="18" height="13" rx="2"/>
+                <circle cx="12" cy="13" r="3"/>
+                <path d="M9 7L10 4H14L15 7"/>
+            </svg>
+            Fotografe o endereço que está no papel
+        </button>
+
+        <div class="section-label">Destinos que você usa bastante</div>
+
+        <div class="button-grid">
+            <button class="btn-secondary" onclick="selectDestination('Hospital de Base')">🏥 Hospital de Base</button>
+            <button class="btn-secondary" onclick="selectDestination('Shopping Iguatemi')">🛍️ Shopping Iguatemi</button>
+            <button class="btn-secondary" onclick="selectDestination('Terminal Central')">🚌 Terminal Central</button>
+            <button class="btn-secondary" onclick="selectDestination('Casa')">🏠 Casa</button>
+        </div>
+
+        <div class="footer-text">v2.4.1 • Feito para você com carinho</div>
+
+        <button class="voice-button" onclick="speakScreen('home')">
+            <span class="voice-button-icon">🔊</span>
+            Ler em voz alta
+        </button>
+    </div>
+
+    <!-- TELA 2: Confirmação OCR (REFORÇADA v2.4) -->
+    <div id="screen-ocr" class="screen">
+        <div class="back-btn" onclick="showScreen('screen-home')">
+            ← Voltar
+        </div>
+
+        <div class="ocr-header">
+            <div class="ocr-icon">📄✓</div>
+            <div class="ocr-title">Conseguimos ler!</div>
+            <div class="ocr-subtitle">Confira se está correto:</div>
+        </div>
+
+        <div class="ocr-box">
+            <div class="ocr-text" id="ocr-result">
+                🏥 Hospital de Base<br>
+                Rua Alberto Andaló, 1500
+            </div>
+        </div>
+
+        <div class="confidence-badge">
+            <div class="confidence-text">
+                <span class="confidence-icon">✓</span>
+                Este endereço está correto?
+            </div>
+        </div>
+
+        <button class="btn-primary btn-huge btn-confirm" onclick="confirmOCR()">
+            ✅ Sim, está certo! Vamos lá
+        </button>
+
+        <button class="btn-primary btn-huge btn-edit" onclick="showScreen('screen-home')">
+            ✏️ Não, quero corrigir
+        </button>
+
+        <button class="voice-button" onclick="speakOCRResult()">
+            <span class="voice-button-icon">🔊</span>
+            Ler endereço
+        </button>
+    </div>
+
+    <!-- TELA 3: Resultados (NOVA - Com Reforço de Confiança) -->
+    <div id="screen-results" class="screen">
+        <div class="back-btn" onclick="showScreen('screen-home')">
+            ← Voltar
+        </div>
+
+        <div style="text-align: center; margin: 20px 0 30px 0;">
+            <div style="font-size: 32px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px;">
+                Melhor caminho encontrado!
+            </div>
+            <div style="font-size: 20px; color: #666;">
+                De Casa → <span id="destination-name">Hospital de Base</span>
+            </div>
+        </div>
+
+        <!-- Badge de Confiança (GPT - Crítico) -->
+        <div class="confidence-badge" style="margin-bottom: 20px;">
+            <div class="confidence-text">
+                <span class="confidence-icon">✓</span>
+                Este é o caminho mais rápido
+            </div>
+        </div>
+
+        <!-- Card da Rota -->
+        <div class="card" style="border: 2px solid #007AFF;">
+            <div style="font-size: 48px; font-weight: 700; color: #007AFF; margin-bottom: 8px;">
+                35 min
+            </div>
+            <div style="font-size: 22px; color: #333; margin-bottom: 24px;">
+                tempo total
+            </div>
+
+            <div style="border-top: 1px solid #f0f0f0; padding-top: 20px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #999; margin-top: 8px; flex-shrink: 0;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">
+                            Caminhe 5 min até o ponto
+                        </div>
+                        <div style="font-size: 18px; color: #666;">
+                            Rua Voluntários de São Paulo
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #34C759; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0;">
+                        305
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">
+                            Pegue o ônibus 305
+                        </div>
+                        <div style="font-size: 18px; color: #666;">
+                            22 minutos no ônibus
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 14px;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #999; margin-top: 8px; flex-shrink: 0;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">
+                            Caminhe 8 min até o destino
+                        </div>
+                        <div style="font-size: 18px; color: #666;">
+                            Você chegou!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info adicional -->
+            <div style="background: #E8F5E9; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="font-size: 18px; color: #2E7D32; font-weight: 600;">
+                    ✓ Sem integração • R$ 5,00
+                </div>
+            </div>
+
+            <!-- Mensagem de Segurança (GPT - Reduz medo de errar) -->
+            <div style="background: #FFF8E1; border: 2px solid #FFA726; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="font-size: 18px; color: #E65100; font-weight: 600; margin-bottom: 8px;">
+                    💡 Não se preocupe
+                </div>
+                <div style="font-size: 18px; color: #E65100;">
+                    Se algo der errado, o app recalcula o caminho para você
+                </div>
+            </div>
+
+            <button class="btn-primary" style="background: #34C759; font-size: 24px; height: 70px;" onclick="alert('🚀 Iniciando navegação!\n\n(Tela de navegação será implementada)')">
+                Me leva lá!
+            </button>
+        </div>
+
+        <button class="voice-button" onclick="alert('🔊 Lendo rota...\n\nCaminhe 5 minutos até o ponto na Rua Voluntários. Pegue o ônibus 305. Fique 22 minutos no ônibus. Caminhe 8 minutos até o Hospital de Base.')">
+            <span class="voice-button-icon">🔊</span>
+            Ler rota
+        </button>
+    </div>
+
+    <!-- MODAL CÂMERA (v2.3) -->
+    <div id="camera-modal" class="camera-modal">
+        <div style="width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);">
+            
+            <div style="position: absolute; top: 40px; left: 0; right: 0; text-align: center; z-index: 10; padding: 0 20px;">
+                <div style="background: rgba(0,122,255,0.9); color: white; padding: 20px; border-radius: 16px; backdrop-filter: blur(10px);">
+                    <div style="font-size: 26px; font-weight: 700; margin-bottom: 8px;">📄 Posicione o papel aqui</div>
+                    <div style="font-size: 20px; opacity: 0.95;">Centralize o endereço no retângulo azul</div>
+                </div>
+            </div>
+
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 200px; border: 4px solid #007AFF; border-radius: 12px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);">
+                <div style="position: absolute; top: -4px; left: -4px; width: 40px; height: 40px; border-top: 6px solid #00FF00; border-left: 6px solid #00FF00; border-radius: 4px 0 0 0;"></div>
+                <div style="position: absolute; top: -4px; right: -4px; width: 40px; height: 40px; border-top: 6px solid #00FF00; border-right: 6px solid #00FF00; border-radius: 0 4px 0 0;"></div>
+                <div style="position: absolute; bottom: -4px; left: -4px; width: 40px; height: 40px; border-bottom: 6px solid #00FF00; border-left: 6px solid #00FF00; border-radius: 0 0 0 4px;"></div>
+                <div style="position: absolute; bottom: -4px; right: -4px; width: 40px; height: 40px; border-bottom: 6px solid #00FF00; border-right: 6px solid #00FF00; border-radius: 0 0 4px 0;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(to right, transparent, #00FF00, transparent); animation: scan 2s infinite;"></div>
+            </div>
+
+            <div style="position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; gap: 20px; padding: 0 20px;">
+                <button onclick="closeCamera()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 50%; width: 70px; height: 70px; font-size: 20px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px);">
+                    ✕
+                </button>
+                <button onclick="simulateOCR()" style="background: white; color: #007AFF; border: 6px solid rgba(255,255,255,0.3); border-radius: 50%; width: 90px; height: 90px; font-size: 40px; cursor: pointer; box-shadow: 0 4px 20px rgba(255,255,255,0.3);">
+                    📷
+                </button>
+                <button style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 50%; width: 70px; height: 70px; font-size: 26px; cursor: pointer; backdrop-filter: blur(10px); opacity: 0.5;">
+                    ⚡
+                </button>
+            </div>
+
+            <div style="position: absolute; top: 35%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 14px 24px; border-radius: 24px; font-size: 18px; backdrop-filter: blur(10px);">
+                💡 Mantenha o papel bem iluminado
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gpsReady = false;
+        let currentDestination = '';
+
+        window.addEventListener('load', function() {
+            simulateGPSLoading();
+            setTimeout(() => {
+                document.getElementById('destination-input').focus();
+            }, 2500);
+        });
+
+        function simulateGPSLoading() {
+            const loading = document.getElementById('gps-loading');
+            const ready = document.getElementById('gps-ready');
+            const toast = document.getElementById('toast');
+
+            loading.style.display = 'block';
+            ready.style.display = 'none';
+
+            setTimeout(() => {
+                loading.style.display = 'none';
+                ready.style.display = 'block';
+                gpsReady = true;
+
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }, 2000);
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectDestination(dest) {
+            if (!gpsReady) {
+                alert('Aguarde... ainda estamos te localizando!');
+                return;
+            }
+            currentDestination = dest;
+            document.getElementById('destination-name').textContent = dest;
+            showScreen('screen-results');
+        }
+
+        function activateVoiceInput() {
+            alert('🎤 Fale agora o destino...\n\n"Hospital de Base"\n\n(Reconhecimento de voz será implementado com Flutter Speech-to-Text)');
+            // Simular reconhecimento
+            setTimeout(() => {
+                selectDestination('Hospital de Base');
+            }, 1000);
+        }
+
+        function showCamera() {
+            document.getElementById('camera-modal').style.display = 'block';
+        }
+
+        function closeCamera() {
+            document.getElementById('camera-modal').style.display = 'none';
+        }
+
+        function simulateOCR() {
+            closeCamera();
+            setTimeout(() => {
+                showScreen('screen-ocr');
+            }, 300);
+        }
+
+        function confirmOCR() {
+            selectDestination('Hospital de Base');
+        }
+
+        function speakScreen(screen) {
+            const text = gpsReady 
+                ? 'Oi! Para onde você quer ir hoje? Você está na Rua Bernardino de Campos, 2491.'
+                : 'Estamos te localizando, só um momento...';
+            alert(`🔊 Lendo: ${text}\n\n(Voz será implementada com Flutter TTS)`);
+        }
+
+        function speakOCRResult() {
+            const text = document.getElementById('ocr-result').innerText;
+            alert(`🔊 Lendo: ${text}\n\nEste endereço está correto?\n\n(Voz será implementada com Flutter TTS)`);
+        }
+
+        // Permitir Enter no campo de busca
+        document.getElementById('destination-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                selectDestination(this.value);
+            }
+        });
+
+        console.log('WalkBus v2.4.1 - Navegação completa + Reforço de confiança - Carregado!');
+    </script>
+</body>
+</html>
