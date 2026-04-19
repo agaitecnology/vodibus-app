@@ -1,21 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:vodibus_app/theme/app_colors.dart';
+import 'package:vodibus_app/models/route.dart' as transit;
+import 'package:vodibus_app/services/transit_service.dart';
 import 'detalhe_screen.dart';
 
-class ResultadosScreen extends StatelessWidget {
+class ResultadosScreen extends StatefulWidget {
   final String destino;
   final Position? posicao;
 
   const ResultadosScreen({super.key, required this.destino, this.posicao});
 
-  final List<Map<String, String>> _linhas = const [
-    {'numero': '101', 'nome': 'Centro — Terminal Norte', 'horario': '08:15'},
-    {'numero': '204', 'nome': 'Bairro Sul — Centro', 'horario': '08:22'},
-    {'numero': '310', 'nome': 'Terminal Leste — Shopping', 'horario': '08:30'},
-    {'numero': '415', 'nome': 'Vila Nova — Centro', 'horario': '08:45'},
-    {'numero': '502', 'nome': 'Centro — Aeroporto', 'horario': '09:00'},
-  ];
+  @override
+  State<ResultadosScreen> createState() => _ResultadosScreenState();
+}
+
+class _ResultadosScreenState extends State<ResultadosScreen> {
+  List<transit.Route> _linhas = [];
+  bool _carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _buscarLinhas();
+  }
+
+  Future<void> _buscarLinhas() async {
+    final linhas = await TransitService.buscarLinhas(widget.destino);
+    final todas = linhas.isEmpty
+        ? await TransitService.listarTodasLinhas()
+        : linhas;
+
+    if (!mounted) return;
+    setState(() {
+      _linhas = todas;
+      _carregando = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +45,7 @@ class ResultadosScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.azulEscuro,
         title: Text(
-          'Ônibus para: $destino',
+          'Ônibus para: ${widget.destino}',
           style: const TextStyle(
             color: AppColors.branco,
             fontSize: 18,
@@ -35,23 +56,37 @@ class ResultadosScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Indicador GPS
-          if (posicao != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: AppColors.verdeAzulado,
-              child: Row(
-                children: [
+          // Indicador operadora
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: AppColors.verdeAzulado,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.directions_bus,
+                  color: AppColors.azulEscuro,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  TransitService.operadora.agencyName,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.azulEscuro,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (posicao != null) ...[
+                  const Spacer(),
                   const Icon(
                     Icons.location_on,
                     color: AppColors.azulEscuro,
                     size: 16,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Text(
-                    'Lat: ${posicao!.latitude.toStringAsFixed(4)}, '
-                    'Lng: ${posicao!.longitude.toStringAsFixed(4)}',
+                    'GPS ativo',
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.azulEscuro,
@@ -59,94 +94,112 @@ class ResultadosScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
+          ),
 
           // Lista de linhas
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _linhas.length,
-              itemBuilder: (context, index) {
-                final linha = _linhas[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetalheScreen(
-                          numero: linha['numero']!,
-                          nome: linha['nome']!,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.branco,
-                      borderRadius: BorderRadius.circular(16),
+            child: _carregando
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.azulMedio,
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: AppColors.azulEscuro,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text(
-                              linha['numero']!,
-                              style: const TextStyle(
-                                color: AppColors.branco,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                  )
+                : _linhas.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Nenhuma linha encontrada',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.cinzaTexto,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _linhas.length,
+                    itemBuilder: (context, index) {
+                      final linha = _linhas[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetalheScreen(
+                                numero: linha.routeShortName,
+                                nome: linha.routeLongName,
                               ),
                             ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.branco,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                linha['nome']!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textoPrincipal,
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: AppColors.azulEscuro,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    linha.routeShortName,
+                                    style: const TextStyle(
+                                      color: AppColors.branco,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Próximo: ${linha['horario']}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.verde,
-                                  fontWeight: FontWeight.w600,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      linha.routeLongName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textoPrincipal,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Tipo: ônibus urbano',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.cinzaTexto,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: AppColors.azulMedio,
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: AppColors.azulMedio,
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
     );
   }
+
+  Position? get posicao => widget.posicao;
 }
