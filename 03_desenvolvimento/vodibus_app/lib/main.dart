@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vodibus_app/theme/app_colors.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/favoritos_screen.dart';
@@ -16,7 +17,7 @@ class VoDiBusApp extends StatelessWidget {
       title: 'VoDiBus',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.azulMedio),
         useMaterial3: true,
       ),
       home: const SplashScreen(),
@@ -47,8 +48,8 @@ class _MainScreenState extends State<MainScreen> {
             _indiceAtual = index;
           });
         },
-        selectedItemColor: const Color(0xFF1565C0),
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.azulMedio,
+        unselectedItemColor: AppColors.cinzaTexto,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Buscar'),
           BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favoritos'),
