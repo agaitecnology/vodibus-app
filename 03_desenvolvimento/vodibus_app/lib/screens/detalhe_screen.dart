@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:vodibus_app/theme/app_colors.dart';
+import 'package:vodibus_app/models/trip.dart';
+import 'package:vodibus_app/services/transit_service.dart';
 import 'package:vodibus_app/screens/trip_screen.dart';
 import 'package:vodibus_app/screens/walking_screen.dart';
 
-class DetalheScreen extends StatelessWidget {
+class DetalheScreen extends StatefulWidget {
   final String numero;
   final String nome;
 
   const DetalheScreen({super.key, required this.numero, required this.nome});
 
-  final List<Map<String, String>> _paradas = const [
-    {'parada': 'Terminal Central', 'horario': '08:15'},
-    {'parada': 'Praça da Sé', 'horario': '08:22'},
-    {'parada': 'Av. Principal', 'horario': '08:28'},
-    {'parada': 'Hospital Municipal', 'horario': '08:35'},
-    {'parada': 'Shopping Center', 'horario': '08:42'},
-    {'parada': 'Terminal Norte', 'horario': '08:50'},
-  ];
+  @override
+  State<DetalheScreen> createState() => _DetalheScreenState();
+}
+
+class _DetalheScreenState extends State<DetalheScreen> {
+  List<StopTime> _paradas = [];
+  bool _carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _buscarViagens();
+  }
+
+  Future<void> _buscarViagens() async {
+    final viagens = await TransitService.buscarViagens(widget.numero);
+    if (!mounted) return;
+    setState(() {
+      _paradas = viagens.isNotEmpty ? viagens.first.stopTimes : [];
+      _carregando = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +41,7 @@ class DetalheScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.azulEscuro,
         title: Text(
-          'Linha $numero',
+          'Linha ${widget.numero}',
           style: const TextStyle(
             color: AppColors.branco,
             fontSize: 18,
@@ -41,7 +57,7 @@ class DetalheScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             color: AppColors.azulEscuro,
             child: Text(
-              nome,
+              widget.nome,
               style: const TextStyle(color: AppColors.branco, fontSize: 16),
             ),
           ),
@@ -63,63 +79,82 @@ class DetalheScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _paradas.length,
-              itemBuilder: (context, index) {
-                final parada = _paradas[index];
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: AppColors.azulMedio,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        if (index < _paradas.length - 1)
-                          Container(
-                            width: 2,
-                            height: 56,
-                            color: AppColors.azulMedio,
-                          ),
-                      ],
+            child: _carregando
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.azulMedio,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              parada['parada']!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textoPrincipal,
-                              ),
-                            ),
-                            Text(
-                              parada['horario']!,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.verde,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                  )
+                : _paradas.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Paradas não disponíveis',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.cinzaTexto,
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _paradas.length,
+                    itemBuilder: (context, index) {
+                      final parada = _paradas[index];
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            children: [
+                              Container(
+                                width: 16,
+                                height: 16,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.azulMedio,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              if (index < _paradas.length - 1)
+                                Container(
+                                  width: 2,
+                                  height: 56,
+                                  color: AppColors.azulMedio,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      parada.stopName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textoPrincipal,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    parada.arrivalTime.substring(0, 5),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.verde,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
           ),
 
           // Botões de ação
@@ -135,7 +170,7 @@ class DetalheScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => WalkingScreen(destino: nome),
+                          builder: (_) => WalkingScreen(destino: widget.nome),
                         ),
                       );
                     },
@@ -168,8 +203,10 @@ class DetalheScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              TripScreen(numeroLinha: numero, nomeLinha: nome),
+                          builder: (_) => TripScreen(
+                            numeroLinha: widget.numero,
+                            nomeLinha: widget.nome,
+                          ),
                         ),
                       );
                     },
