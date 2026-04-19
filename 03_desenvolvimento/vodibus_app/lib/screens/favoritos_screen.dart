@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vodibus_app/theme/app_colors.dart';
 
 class FavoritosScreen extends StatelessWidget {
   const FavoritosScreen({super.key});
@@ -11,25 +12,33 @@ class FavoritosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.cinzaFundo,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: AppColors.azulEscuro,
         title: const Text(
           'Meus Favoritos',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: AppColors.branco,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.branco),
       ),
       body: _favoritos.isEmpty
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.star_border, size: 80, color: Colors.grey),
+                  Icon(
+                    Icons.star_border,
+                    size: 80,
+                    color: AppColors.cinzaClaro,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'Nenhum favorito ainda',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: TextStyle(fontSize: 18, color: AppColors.cinzaTexto),
                   ),
                 ],
               ),
@@ -39,39 +48,46 @@ class FavoritosScreen extends StatelessWidget {
               itemCount: _favoritos.length,
               itemBuilder: (context, index) {
                 final item = _favoritos[index];
-                return Card(
+                return Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.branco,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1565C0),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          item['numero']!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.azulEscuro,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            item['numero']!,
+                            style: const TextStyle(
+                              color: AppColors.branco,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    title: Text(
-                      item['nome']!,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          item['nome']!,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textoPrincipal,
+                          ),
+                        ),
                       ),
-                    ),
-                    trailing: const Icon(Icons.star, color: Colors.orange),
+                      const Icon(Icons.star, color: AppColors.amarelo),
+                    ],
                   ),
                 );
               },

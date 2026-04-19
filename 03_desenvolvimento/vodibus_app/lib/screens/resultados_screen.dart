@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vodibus_app/theme/app_colors.dart';
 import 'detalhe_screen.dart';
 
 class ResultadosScreen extends StatelessWidget {
@@ -17,71 +18,95 @@ class ResultadosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.cinzaFundo,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: AppColors.azulEscuro,
         title: Text(
           'Ônibus para: $destino',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: AppColors.branco,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.branco),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _linhas.length,
         itemBuilder: (context, index) {
           final linha = _linhas[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1565C0),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    linha['numero']!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DetalheScreen(
+                    numero: linha['numero']!,
+                    nome: linha['nome']!,
                   ),
                 ),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.branco,
+                borderRadius: BorderRadius.circular(16),
               ),
-              title: Text(
-                linha['nome']!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                'Próximo: ${linha['horario']}',
-                style: const TextStyle(fontSize: 14, color: Colors.green),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                color: Color(0xFF1565C0),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DetalheScreen(
-                      numero: linha['numero']!,
-                      nome: linha['nome']!,
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.azulEscuro,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        linha['numero']!,
+                        style: const TextStyle(
+                          color: AppColors.branco,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
-                );
-              },
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          linha['nome']!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textoPrincipal,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Próximo: ${linha['horario']}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.verde,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.azulMedio,
+                  ),
+                ],
+              ),
             ),
           );
         },

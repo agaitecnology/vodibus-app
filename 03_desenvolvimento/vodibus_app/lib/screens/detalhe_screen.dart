@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vodibus_app/theme/app_colors.dart';
 
 class DetalheScreen extends StatelessWidget {
   final String numero;
@@ -18,38 +19,42 @@ class DetalheScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.cinzaFundo,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: AppColors.azulEscuro,
         title: Text(
           'Linha $numero',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: AppColors.branco,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.branco),
       ),
       body: Column(
         children: [
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            color: const Color(0xFF1565C0),
+            color: AppColors.azulEscuro,
             child: Text(
               nome,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(color: AppColors.branco, fontSize: 16),
             ),
           ),
           const Padding(
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.location_on, color: Color(0xFF1565C0)),
+                Icon(Icons.location_on, color: AppColors.azulMedio),
                 SizedBox(width: 8),
                 Text(
                   'Paradas da linha',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1565C0),
+                    color: AppColors.azulEscuro,
                   ),
                 ),
               ],
@@ -70,7 +75,7 @@ class DetalheScreen extends StatelessWidget {
                           width: 16,
                           height: 16,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF1565C0),
+                            color: AppColors.azulMedio,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -78,7 +83,7 @@ class DetalheScreen extends StatelessWidget {
                           Container(
                             width: 2,
                             height: 56,
-                            color: const Color(0xFF1565C0),
+                            color: AppColors.azulMedio,
                           ),
                       ],
                     ),
@@ -94,13 +99,14 @@ class DetalheScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
+                                color: AppColors.textoPrincipal,
                               ),
                             ),
                             Text(
                               parada['horario']!,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: Colors.green,
+                                color: AppColors.verde,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
