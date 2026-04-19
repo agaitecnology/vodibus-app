@@ -26,20 +26,29 @@ class LocationService {
       if (lugares.isEmpty) return mensagemFallback(lat, lng);
 
       final lugar = lugares.first;
-      final partes = [
-        lugar.street,
-        lugar.subLocality,
-        lugar.locality,
-      ].where((p) => p != null && p.isNotEmpty).toList();
 
-      if (partes.isEmpty) return mensagemFallback(lat, lng);
-      return partes.join(', ');
+      final rua = lugar.street ?? '';
+      final numero = lugar.subThoroughfare ?? '';
+      final bairro = lugar.subLocality ?? '';
+      final cidade = lugar.locality ?? '';
+
+      String endereco = '';
+      if (rua.isNotEmpty) {
+        endereco = numero.isNotEmpty ? '$rua, $numero' : rua;
+      }
+      if (bairro.isNotEmpty) {
+        endereco += endereco.isNotEmpty ? ' — $bairro' : bairro;
+      }
+      if (endereco.isEmpty && cidade.isNotEmpty) {
+        endereco = cidade;
+      }
+
+      return endereco.isNotEmpty ? endereco : mensagemFallback(lat, lng);
     } catch (e) {
       return mensagemFallback(lat, lng);
     }
   }
 
-  // Fallback claro para o usuário
   static String mensagemFallback(double lat, double lng) {
     return 'Lat: ${lat.toStringAsFixed(4)}, Lng: ${lng.toStringAsFixed(4)}';
   }
@@ -48,7 +57,6 @@ class LocationService {
     return mensagemFallback(posicao.latitude, posicao.longitude);
   }
 
-  // Mensagens de status para o usuário
   static String mensagemStatus(Position? posicao) {
     if (posicao == null) return 'GPS não disponível — verifique as permissões';
     return '✓ Localização encontrada';
