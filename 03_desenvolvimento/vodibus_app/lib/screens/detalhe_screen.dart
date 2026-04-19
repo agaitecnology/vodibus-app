@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vodibus_app/theme/app_colors.dart';
 import 'package:vodibus_app/screens/trip_screen.dart';
+import 'package:vodibus_app/screens/walking_screen.dart';
 
 class DetalheScreen extends StatelessWidget {
   final String numero;
@@ -120,37 +121,79 @@ class DetalheScreen extends StatelessWidget {
               },
             ),
           ),
+
+          // Botões de ação
           Padding(
             padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          TripScreen(numeroLinha: numero, nomeLinha: nome),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WalkingScreen(destino: nome),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.azulMedio,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.verde,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    icon: const Icon(
+                      Icons.directions_walk,
+                      color: AppColors.branco,
+                    ),
+                    label: const Text(
+                      'Como chegar ao ponto',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.branco,
+                      ),
+                    ),
                   ),
                 ),
-                icon: const Icon(Icons.directions_bus, color: AppColors.branco),
-                label: const Text(
-                  'Embarcar nesta linha',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.branco,
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              TripScreen(numeroLinha: numero, nomeLinha: nome),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.verde,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.directions_bus,
+                      color: AppColors.branco,
+                    ),
+                    label: const Text(
+                      'Embarcar nesta linha',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.branco,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
