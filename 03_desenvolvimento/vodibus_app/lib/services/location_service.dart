@@ -23,7 +23,7 @@ class LocationService {
   static Future<String> obterEndereco(double lat, double lng) async {
     try {
       List<Placemark> lugares = await placemarkFromCoordinates(lat, lng);
-      if (lugares.isEmpty) return 'Endereço não encontrado';
+      if (lugares.isEmpty) return mensagemFallback(lat, lng);
 
       final lugar = lugares.first;
       final partes = [
@@ -32,15 +32,29 @@ class LocationService {
         lugar.locality,
       ].where((p) => p != null && p.isNotEmpty).toList();
 
+      if (partes.isEmpty) return mensagemFallback(lat, lng);
       return partes.join(', ');
     } catch (e) {
-      return 'Endereço não disponível';
+      return mensagemFallback(lat, lng);
     }
   }
 
+  // Fallback claro para o usuário
+  static String mensagemFallback(double lat, double lng) {
+    return 'Lat: ${lat.toStringAsFixed(4)}, Lng: ${lng.toStringAsFixed(4)}';
+  }
+
   static String formatarCoordenadas(Position posicao) {
-    final lat = posicao.latitude.toStringAsFixed(6);
-    final lng = posicao.longitude.toStringAsFixed(6);
-    return 'Lat: $lat, Lng: $lng';
+    return mensagemFallback(posicao.latitude, posicao.longitude);
+  }
+
+  // Mensagens de status para o usuário
+  static String mensagemStatus(Position? posicao) {
+    if (posicao == null) return 'GPS não disponível — verifique as permissões';
+    return '✓ Localização encontrada';
+  }
+
+  static String mensagemPermissao() {
+    return 'Permita o acesso à localização para encontrar ônibus próximos';
   }
 }

@@ -20,7 +20,6 @@ class Route {
     this.routeDesc,
   });
 
-  // routeType 3 = ônibus urbano (padrão GTFS)
   factory Route.fromJson(Map<String, dynamic> json) {
     return Route(
       routeId: json['route_id'] ?? '',
@@ -45,7 +44,7 @@ class Route {
     'route_desc': routeDesc,
   };
 
-  // Linhas reais da RioPretrans — Rio Preto
+  // Linhas reais da RioPretrans — São José do Rio Preto
   static const List<Route> linhasRioPreto = [
     Route(
       routeId: '101',
@@ -80,6 +79,69 @@ class Route {
       agencyId: 'riopretrans',
       routeShortName: '702',
       routeLongName: 'Pq. Nova Esperança — Dist. Industrial',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '110',
+      agencyId: 'riopretrans',
+      routeShortName: '110',
+      routeLongName: 'Dist. Carlos Arnaldo — Centro',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '215',
+      agencyId: 'riopretrans',
+      routeShortName: '215',
+      routeLongName: 'Dist. Ind. Ulisses Guimarães — Centro',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '307',
+      agencyId: 'riopretrans',
+      routeShortName: '307',
+      routeLongName: 'Jd. Tarraf — Centro',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '308',
+      agencyId: 'riopretrans',
+      routeShortName: '308',
+      routeLongName: 'Jd. Maracanã — Centro',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '206',
+      agencyId: 'riopretrans',
+      routeShortName: '206',
+      routeLongName: 'Jd. Nunes — Centro',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '208',
+      agencyId: 'riopretrans',
+      routeShortName: '208',
+      routeLongName: 'São Jorge — Via Res. América',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '122',
+      agencyId: 'riopretrans',
+      routeShortName: '122',
+      routeLongName: 'Solidariedade — Res. América',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '410A',
+      agencyId: 'riopretrans',
+      routeShortName: '410A',
+      routeLongName: 'Eng. Schmitt — Represa',
+      routeType: 3,
+    ),
+    Route(
+      routeId: '410B',
+      agencyId: 'riopretrans',
+      routeShortName: '410B',
+      routeLongName: 'Eng. Schmitt — Washington Luís',
       routeType: 3,
     ),
   ];
