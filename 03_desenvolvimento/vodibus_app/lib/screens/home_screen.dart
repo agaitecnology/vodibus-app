@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:vodibus_app/theme/app_colors.dart';
+import 'package:vodibus_app/services/location_service.dart';
 import 'package:vodibus_app/screens/resultados_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,6 +13,40 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
+  Position? _posicao;
+  String _statusGPS = 'Localizando...';
+  bool _carregandoGPS = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _iniciarGPS();
+  }
+
+  Future<void> _iniciarGPS() async {
+    final posicao = await LocationService.obterLocalizacao();
+    if (!mounted) return;
+
+    String status = 'Localização não disponível';
+    if (posicao != null) {
+      final endereco = await LocationService.obterEndereco(
+        posicao.latitude,
+        posicao.longitude,
+      );
+      status =
+          (endereco == 'Endereço não disponível' ||
+              endereco == 'Endereço não encontrado')
+          ? LocationService.formatarCoordenadas(posicao)
+          : endereco;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _posicao = posicao;
+      _carregandoGPS = false;
+      _statusGPS = status;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,35 +101,71 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppColors.branco,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(
-                            Icons.location_on,
-                            color: AppColors.azulMedio,
-                            size: 24,
+                          _carregandoGPS
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.azulMedio,
+                                  ),
+                                )
+                              : Icon(
+                                  _posicao != null
+                                      ? Icons.location_on
+                                      : Icons.location_off,
+                                  color: _posicao != null
+                                      ? AppColors.azulMedio
+                                      : Colors.red,
+                                  size: 24,
+                                ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _posicao != null
+                                      ? 'Você está aqui'
+                                      : 'GPS indisponível',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textoPrincipal,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _statusGPS,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.cinzaTexto,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Você está aqui',
+                          if (_posicao != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.verdeAzulado,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                '✓ GPS',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 13,
+                                  color: AppColors.azulEscuro,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textoPrincipal,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Localizando...',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.cinzaTexto,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
                         ],
                       ),
                     ),
@@ -171,8 +243,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    ResultadosScreen(destino: _controller.text),
+                                builder: (_) => ResultadosScreen(
+                                  destino: _controller.text,
+                                  posicao: _posicao,
+                                ),
                               ),
                             );
                           }
