@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _iniciarGPS();
+    _controller.addListener(() => setState(() {}));
   }
 
   Future<void> _iniciarGPS() async {
@@ -49,44 +50,214 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Entrada 1 — Digitar
+  Future<void> _abrirDigitacao() async {
+    final texto = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.keyboard, color: AppColors.azulMedio, size: 28),
+              SizedBox(width: 8),
+              Text(
+                'Digite o destino',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.azulEscuro,
+                ),
+              ),
+            ],
+          ),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textoPrincipal,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Ex: Hospital de Base',
+              hintStyle: const TextStyle(color: AppColors.cinzaClaro),
+              filled: true,
+              fillColor: AppColors.verdeAzulado,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context, ctrl.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.azulMedio,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.check_circle, color: AppColors.branco),
+                label: const Text(
+                  'Confirmar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.branco,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (texto != null && texto.isNotEmpty) {
+      await _mostrarDialogoConfirmacao(texto);
+    }
+  }
+
+  // Entrada 2 — Falar
   Future<void> _ativarMicrofone() async {
     if (_escutando) {
       await VoiceService.parar();
       setState(() => _escutando = false);
       return;
     }
+
     setState(() => _escutando = true);
+
     await VoiceService.ouvir(
-      onResultado: (texto) {
-        setState(() {
-          _controller.text = texto;
-          _escutando = false;
-        });
+      onResultado: (texto) async {
+        setState(() => _escutando = false);
+        if (!mounted) return;
+        await _mostrarDialogoConfirmacao(texto);
       },
       onFim: () => setState(() => _escutando = false),
     );
   }
 
+  // Entrada 3 — Fotografar
   Future<void> _abrirCamera() async {
     final endereco = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const OcrScreen()),
     );
-    if (endereco != null) {
-      setState(() => _controller.text = endereco);
+    if (endereco != null && endereco.isNotEmpty) {
+      await _mostrarDialogoConfirmacao(endereco);
     }
   }
 
-  void _buscarOnibus() {
-    if (_controller.text.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              ResultadosScreen(destino: _controller.text, posicao: _posicao),
+  // Diálogo de confirmação — igual para as 3 entradas
+  Future<void> _mostrarDialogoConfirmacao(String texto) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.location_on, color: AppColors.azulMedio, size: 28),
+            SizedBox(width: 8),
+            Text(
+              'Destino:',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.azulEscuro,
+              ),
+            ),
+          ],
         ),
-      );
-    }
+        content: Container(
+          width: double.maxFinite,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.verdeAzulado,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            texto,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.azulEscuro,
+            ),
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.cinzaTexto,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.arrow_back, color: AppColors.branco),
+              label: const Text(
+                'Corrigir',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.branco,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _controller.text = texto);
+                _buscarOnibus(texto);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.verde,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.directions_bus, color: AppColors.branco),
+              label: const Text(
+                'Buscar ônibus!',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.branco,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _buscarOnibus(String destino) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResultadosScreen(destino: destino, posicao: _posicao),
+      ),
+    );
   }
 
   @override
@@ -134,7 +305,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    // Card GPS — componente separado
                     CardGps(
                       carregando: _carregandoGPS,
                       posicao: _posicao,
@@ -142,41 +312,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Card destino — componente separado
                     CardDestino(
                       controller: _controller,
                       escutando: _escutando,
+                      onDigitar: _abrirDigitacao,
                       onMicrofone: _ativarMicrofone,
                       onCamera: _abrirCamera,
-                      onBuscar: _buscarOnibus,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Botão buscar
-                    SizedBox(
-                      width: double.infinity,
-                      height: 60,
-                      child: ElevatedButton(
-                        onPressed: _buscarOnibus,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.azulMedio,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: const Text(
-                          'Buscar ônibus',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.branco,
-                          ),
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Linhas populares — componente separado
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(

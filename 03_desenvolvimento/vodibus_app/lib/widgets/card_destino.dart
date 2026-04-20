@@ -4,17 +4,17 @@ import 'package:vodibus_app/theme/app_colors.dart';
 class CardDestino extends StatelessWidget {
   final TextEditingController controller;
   final bool escutando;
+  final VoidCallback onDigitar;
   final VoidCallback onMicrofone;
   final VoidCallback onCamera;
-  final VoidCallback onBuscar;
 
   const CardDestino({
     super.key,
     required this.controller,
     required this.escutando,
+    required this.onDigitar,
     required this.onMicrofone,
     required this.onCamera,
-    required this.onBuscar,
   });
 
   @override
@@ -37,72 +37,50 @@ class CardDestino extends StatelessWidget {
               color: AppColors.cinzaTexto,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // Três botões de entrada
           Row(
             children: [
+              // Digite
               Expanded(
-                child: TextField(
-                  controller: controller,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textoPrincipal,
-                  ),
-                  onSubmitted: (_) => onBuscar(),
-                  decoration: const InputDecoration(
-                    hintText: 'Digite, fale ou fotografe',
-                    hintStyle: TextStyle(
-                      color: AppColors.cinzaClaro,
-                      fontSize: 16,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-              // Botão microfone
-              GestureDetector(
-                onTap: onMicrofone,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: escutando ? Colors.red : AppColors.azulMedio,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    escutando ? Icons.stop : Icons.mic,
-                    color: AppColors.branco,
-                    size: 22,
-                  ),
+                child: _botaoEntrada(
+                  icone: Icons.keyboard,
+                  label: 'Digite',
+                  cor: AppColors.azulEscuro,
+                  onTap: onDigitar,
                 ),
               ),
               const SizedBox(width: 8),
-              // Botão câmera OCR
-              GestureDetector(
-                onTap: onCamera,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    color: AppColors.amarelo,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: AppColors.azulEscuro,
-                    size: 22,
-                  ),
+              // Fale
+              Expanded(
+                child: _botaoEntrada(
+                  icone: escutando ? Icons.stop : Icons.mic,
+                  label: escutando ? 'Ouvindo...' : 'Fale',
+                  cor: escutando ? Colors.red : AppColors.azulMedio,
+                  onTap: onMicrofone,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Fotografe
+              Expanded(
+                child: _botaoEntrada(
+                  icone: Icons.camera_alt,
+                  label: 'Fotografe',
+                  cor: AppColors.amarelo,
+                  corTexto: AppColors.azulEscuro,
+                  onTap: onCamera,
                 ),
               ),
             ],
           ),
+
+          // Status microfone
           if (escutando)
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.graphic_eq, color: Colors.red, size: 20),
                   SizedBox(width: 8),
@@ -118,6 +96,39 @@ class CardDestino extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _botaoEntrada({
+    required IconData icone,
+    required String label,
+    required Color cor,
+    Color corTexto = AppColors.branco,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: cor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icone, color: corTexto, size: 26),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: corTexto,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
