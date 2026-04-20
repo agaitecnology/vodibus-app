@@ -3,9 +3,6 @@ import 'package:vodibus_app/models/stop.dart';
 import 'package:vodibus_app/models/trip.dart';
 import 'package:vodibus_app/models/agency.dart';
 
-// TransitService — arquitetura GTFS
-// Hoje: dados mockados da RioPretrans
-// Futuro: substituir _buscarLinhas() por chamada à API real
 class TransitService {
   static final Agency _operadora = Agency.riopretrans;
 
@@ -33,15 +30,23 @@ class TransitService {
         .toList();
   }
 
+  // Busca paradas de uma linha
+  static Future<List<Stop>> buscarParadasDaLinha(String routeId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return Stop.paradasRioPreto
+        .where((stop) => stop.routeId == routeId)
+        .toList();
+  }
+
   // Busca paradas próximas por coordenadas
   static Future<List<Stop>> buscarParadasProximas(
     double lat,
     double lon, {
-    double raioKm = 0.5,
+    double raioKm = 1.0,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return Stop.terminalCentral.where((stop) {
-      final distancia = _calcularDistancia(
+    return Stop.paradasRioPreto.where((stop) {
+      final distancia = calcularDistanciaKm(
         lat,
         lon,
         stop.stopLat,
@@ -55,7 +60,7 @@ class TransitService {
   static Agency get operadora => _operadora;
 
   // Cálculo de distância em km (fórmula Haversine simplificada)
-  static double _calcularDistancia(
+  static double calcularDistanciaKm(
     double lat1,
     double lon1,
     double lat2,
