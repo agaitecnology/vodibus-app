@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:vodibus_app/theme/app_colors.dart';
 import 'package:vodibus_app/services/location_service.dart';
+import 'package:vodibus_app/services/voice_service.dart';
 import 'package:vodibus_app/screens/resultados_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Position? _posicao;
   String _statusGPS = 'Localizando...';
   bool _carregandoGPS = true;
+  bool _escutando = false;
 
   @override
   void initState() {
@@ -33,11 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         posicao.latitude,
         posicao.longitude,
       );
-      status =
-          (endereco == 'Endereço não disponível' ||
-              endereco == 'Endereço não encontrado')
-          ? LocationService.formatarCoordenadas(posicao)
-          : endereco;
+      status = endereco;
     }
 
     if (!mounted) return;
@@ -46,6 +44,40 @@ class _HomeScreenState extends State<HomeScreen> {
       _carregandoGPS = false;
       _statusGPS = status;
     });
+  }
+
+  Future<void> _ativarMicrofone() async {
+    if (_escutando) {
+      await VoiceService.parar();
+      setState(() => _escutando = false);
+      return;
+    }
+
+    setState(() => _escutando = true);
+
+    await VoiceService.ouvir(
+      onResultado: (texto) {
+        setState(() {
+          _controller.text = texto;
+          _escutando = false;
+        });
+      },
+      onFim: () {
+        setState(() => _escutando = false);
+      },
+    );
+  }
+
+  void _buscarOnibus() {
+    if (_controller.text.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ResultadosScreen(destino: _controller.text, posicao: _posicao),
+        ),
+      );
+    }
   }
 
   @override
@@ -201,11 +233,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.textoPrincipal,
                                   ),
+                                  onSubmitted: (_) => _buscarOnibus(),
                                   decoration: const InputDecoration(
-                                    hintText: 'Digite o destino',
+                                    hintText: 'Digite ou fale o destino',
                                     hintStyle: TextStyle(
                                       color: AppColors.cinzaClaro,
-                                      fontSize: 22,
+                                      fontSize: 18,
                                     ),
                                     border: InputBorder.none,
                                     isDense: true,
@@ -213,21 +246,49 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.azulMedio,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.mic,
-                                  color: AppColors.branco,
-                                  size: 22,
+                              GestureDetector(
+                                onTap: _ativarMicrofone,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: _escutando
+                                        ? Colors.red
+                                        : AppColors.azulMedio,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    _escutando ? Icons.stop : Icons.mic,
+                                    color: AppColors.branco,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
+                          if (_escutando)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 12),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.graphic_eq,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Estou ouvindo... fale o destino',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -238,19 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: double.infinity,
                       height: 60,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_controller.text.isNotEmpty) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ResultadosScreen(
-                                  destino: _controller.text,
-                                  posicao: _posicao,
-                                ),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: _buscarOnibus,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.azulMedio,
                           shape: RoundedRectangleBorder(
@@ -283,8 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
                     _cartaoLinha('101', 'Centro — Terminal Norte', '08:15'),
-                    _cartaoLinha('204', 'Bairro Sul — Centro', '08:22'),
-                    _cartaoLinha('310', 'Terminal Leste — Shopping', '08:30'),
+                    _cartaoLinha('204', 'Pq. Cidadania — Centro', '08:22'),
+                    _cartaoLinha('305', 'Av. José Munia — Centro', '08:30'),
                   ],
                 ),
               ),
