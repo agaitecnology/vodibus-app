@@ -4,6 +4,10 @@ import 'package:vodibus_app/theme/app_colors.dart';
 import 'package:vodibus_app/services/location_service.dart';
 import 'package:vodibus_app/services/voice_service.dart';
 import 'package:vodibus_app/screens/resultados_screen.dart';
+import 'package:vodibus_app/screens/ocr_screen.dart';
+import 'package:vodibus_app/widgets/card_gps.dart';
+import 'package:vodibus_app/widgets/card_destino.dart';
+import 'package:vodibus_app/widgets/card_linha_popular.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,11 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     String status = 'Localização não disponível';
     if (posicao != null) {
-      final endereco = await LocationService.obterEndereco(
+      status = await LocationService.obterEndereco(
         posicao.latitude,
         posicao.longitude,
       );
-      status = endereco;
     }
 
     if (!mounted) return;
@@ -52,9 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _escutando = false);
       return;
     }
-
     setState(() => _escutando = true);
-
     await VoiceService.ouvir(
       onResultado: (texto) {
         setState(() {
@@ -62,10 +63,18 @@ class _HomeScreenState extends State<HomeScreen> {
           _escutando = false;
         });
       },
-      onFim: () {
-        setState(() => _escutando = false);
-      },
+      onFim: () => setState(() => _escutando = false),
     );
+  }
+
+  Future<void> _abrirCamera() async {
+    final endereco = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const OcrScreen()),
+    );
+    if (endereco != null) {
+      setState(() => _controller.text = endereco);
+    }
   }
 
   void _buscarOnibus() {
@@ -125,172 +134,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    // Card GPS
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.branco,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          _carregandoGPS
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.azulMedio,
-                                  ),
-                                )
-                              : Icon(
-                                  _posicao != null
-                                      ? Icons.location_on
-                                      : Icons.location_off,
-                                  color: _posicao != null
-                                      ? AppColors.azulMedio
-                                      : Colors.red,
-                                  size: 24,
-                                ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _posicao != null
-                                      ? 'Você está aqui'
-                                      : 'GPS indisponível',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textoPrincipal,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _statusGPS,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.cinzaTexto,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_posicao != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.verdeAzulado,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                '✓ GPS',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.azulEscuro,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                    // Card GPS — componente separado
+                    CardGps(
+                      carregando: _carregandoGPS,
+                      posicao: _posicao,
+                      statusGPS: _statusGPS,
                     ),
                     const SizedBox(height: 12),
 
-                    // Card destino
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.branco,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Para onde você quer ir?',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.cinzaTexto,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _controller,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textoPrincipal,
-                                  ),
-                                  onSubmitted: (_) => _buscarOnibus(),
-                                  decoration: const InputDecoration(
-                                    hintText: 'Digite ou fale o destino',
-                                    hintStyle: TextStyle(
-                                      color: AppColors.cinzaClaro,
-                                      fontSize: 18,
-                                    ),
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _ativarMicrofone,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: _escutando
-                                        ? Colors.red
-                                        : AppColors.azulMedio,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _escutando ? Icons.stop : Icons.mic,
-                                    color: AppColors.branco,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_escutando)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 12),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.graphic_eq,
-                                    color: Colors.red,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Estou ouvindo... fale o destino',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
+                    // Card destino — componente separado
+                    CardDestino(
+                      controller: _controller,
+                      escutando: _escutando,
+                      onMicrofone: _ativarMicrofone,
+                      onCamera: _abrirCamera,
+                      onBuscar: _buscarOnibus,
                     ),
                     const SizedBox(height: 16),
 
@@ -318,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Linhas populares
+                    // Linhas populares — componente separado
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -331,78 +189,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _cartaoLinha('101', 'Centro — Terminal Norte', '08:15'),
-                    _cartaoLinha('204', 'Pq. Cidadania — Centro', '08:22'),
-                    _cartaoLinha('305', 'Av. José Munia — Centro', '08:30'),
+                    CardLinhaPopular(
+                      numero: '101',
+                      nome: 'Centro — Terminal Norte',
+                      horario: '08:15',
+                    ),
+                    CardLinhaPopular(
+                      numero: '204',
+                      nome: 'Pq. Cidadania — Centro',
+                      horario: '08:22',
+                    ),
+                    CardLinhaPopular(
+                      numero: '305',
+                      nome: 'Av. José Munia — Centro',
+                      horario: '08:30',
+                    ),
                   ],
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _cartaoLinha(String numero, String nome, String horario) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.branco,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.azulEscuro,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                numero,
-                style: const TextStyle(
-                  color: AppColors.branco,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  nome,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textoPrincipal,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Próximo: $horario',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.verde,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: AppColors.azulMedio,
-          ),
-        ],
       ),
     );
   }
