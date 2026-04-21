@@ -8,6 +8,7 @@ import 'package:vodibus_app/screens/ocr_screen.dart';
 import 'package:vodibus_app/widgets/card_gps.dart';
 import 'package:vodibus_app/widgets/card_destino.dart';
 import 'package:vodibus_app/widgets/card_linha_popular.dart';
+import 'package:vodibus_app/screens/rota_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -255,7 +256,13 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ResultadosScreen(destino: destino, posicao: _posicao),
+        builder: (_) => _posicao != null
+            ? RotaScreen(
+                destino: destino,
+                userLat: _posicao!.latitude,
+                userLon: _posicao!.longitude,
+              )
+            : ResultadosScreen(destino: destino, posicao: _posicao),
       ),
     );
   }

@@ -274,3 +274,205 @@ Situações que afetam a contagem de paradas e roteirização:
 - Verificar processos dart.exe no Gerenciador de Tarefas
 - APK pode ser instalado via WhatsApp ou cabo USB
 - Play Protect exibirá aviso — clicar "Instalar mesmo assim"
+
+---
+
+## 11. Requisitos Funcionais — Roteirização Completa
+
+### 11.1 Fluxo esperado pelo usuário
+
+1. Usuário informa destino (digitando, voz ou OCR)
+2. App identifica localização atual via GPS
+3. App calcula **ponto de ônibus mais próximo** do usuário
+4. App sugere **linha mais adequada** para o destino
+5. App exibe **rota a pé** até o ponto de embarque
+6. App informa **horário previsto** de chegada do ônibus
+7. App calcula **tempo estimado** entre "estou aqui" e embarque
+8. Durante a viagem — contador de paradas em tempo real
+
+### 11.2 Dados necessários para implementação
+
+| Dado | Fonte | Status |
+|---|---|---|
+| Localização do usuário | GPS real | ✅ implementado |
+| Pontos de parada | GTFS stops.txt | 🔜 expandir |
+| Linhas e itinerários | GTFS routes.txt | ✅ parcial |
+| Horários das linhas | GTFS stop_times.txt | 🔜 expandir |
+| Rota a pé até o ponto | Google Maps / OSM | 🔜 integrar |
+| Tempo estimado a pé | Cálculo por distância | 🔜 implementar |
+| Previsão chegada ônibus | API RioPretrans | 🔜 aguarda API |
+
+### 11.3 Algoritmo de sugestão de linha
+
+1. Obter coordenadas do usuário
+2. Calcular distância para todos os pontos de parada
+3. Filtrar pontos das linhas que atendem o destino
+4. Ordenar por: menor distância a pé + menor tempo de espera
+5. Retornar top 3 opções ao usuário
+
+> 📌 Registrado em: 19/04/2026
+> Origem: definição de produto durante desenvolvimento
+
+
+---
+
+## 12. Fluxo Completo de Navegação — VoDiBus!
+
+### 12.1 Sequência de Orientação ao Usuário
+
+**PASSO 1 — ORIGEM**
+- 📍 Você está aqui — [endereço GPS completo]
+- Referência visual do local atual
+
+**PASSO 2 — A PÉ ATÉ O PONTO**
+- 🚶 Saia pela [direita/esquerda]
+- Referências visuais — "após a padaria", "em frente ao banco"
+- Indicação de travessia de rua
+- Semáforos no caminho
+- 🚶 Caminhe [X metros] até o ponto [Y]
+- ⏱ [N minutos a pé]
+
+**PASSO 3 — EMBARQUE**
+- 🚌 Aguarde o ônibus [Linha Z]
+- Sentido da linha — "em direção ao Terminal Norte"
+- Número e letreiro visual do ônibus
+- Plataforma específica no terminal
+- ⏰ Próximo horário: [HH:MM]
+- ⏱ Tempo de espera: [N min]
+
+**PASSO 4 — DURANTE A VIAGEM**
+- ✅ Confirmação de embarque no ônibus correto
+- 🔢 Siga por [N paradas]
+- Nome das paradas intermediárias relevantes
+- ⚠️ Alerta antecipado — "prepare-se, faltam 2 paradas"
+- ⚠️ DESEMBARQUE em [Terminal/Parada X]
+
+**PASSO 5 — BALDEAÇÃO (se necessário)**
+- 🔄 No Terminal Central:
+- Tempo disponível para a baldeação
+- Localização da plataforma dentro do terminal
+- 📍 Vá até a plataforma [X]
+- 🚌 Pegue a linha [000] — horário [HH:MM]
+- O que fazer se perder o horário
+- 🔢 Siga por [N paradas]
+
+**PASSO 6 — DESTINO FINAL**
+- 🚶 Desembarque em [Parada X]
+- Referência visual do ponto de desembarque
+- 🚶 Siga pela [direita/esquerda]
+- 📍 Caminhe [N metros]
+- ✅ Você chegou ao seu destino!
+
+---
+
+### 12.2 Requisitos Técnicos por Passo
+
+| Passo | Dados necessários | Fonte |
+|---|---|---|
+| Origem | GPS + geocoding | Geolocator + Geocoding |
+| A pé até ponto | Rota pedestre + POIs | OpenStreetMap / Google Maps |
+| Embarque | Horários + plataforma | API RioPretrans / GTFS |
+| Durante viagem | GPS em tempo real + paradas | GPS + GTFS |
+| Baldeação | Mapa do terminal + horários | Dados RioPretrans |
+| Destino final | Rota pedestre + POIs | OpenStreetMap / Google Maps |
+
+---
+
+### 12.3 Funcionalidades de Acessibilidade por Passo
+
+| Passo | Recurso |
+|---|---|
+| Todos | TTS — leitura em voz alta |
+| A pé | Vibração a cada curva |
+| Embarque | Alerta sonoro ao chegar o ônibus |
+| Viagem | Vibração + som ao aproximar da parada |
+| Destino | Vibração + voz "Você chegou!" |
+
+---
+
+---
+
+## 12. Fluxo Completo de Navegação — VoDiBus!
+
+### 12.1 Sequência de Orientação ao Usuário
+
+**PASSO 1 — ORIGEM**
+- 📍 Você está aqui — [endereço GPS completo]
+- Referência visual do local atual
+
+**PASSO 2 — A PÉ ATÉ O PONTO**
+- 🚶 Saia pela [direita/esquerda]
+- Referências visuais — "após a padaria", "em frente ao banco"
+- Indicação de travessia de rua
+- Semáforos no caminho
+- 🚶 Caminhe [X metros] até o ponto [Y]
+- ⏱ [N minutos a pé]
+
+**PASSO 3 — EMBARQUE**
+- 🚌 Aguarde o ônibus [Linha Z]
+- Sentido da linha — "em direção ao Terminal Norte"
+- Número e letreiro visual do ônibus
+- Plataforma específica no terminal
+- ⏰ Próximo horário: [HH:MM]
+- ⏱ Tempo de espera: [N min]
+
+**PASSO 4 — DURANTE A VIAGEM**
+- ✅ Confirmação de embarque no ônibus correto
+- 🔢 Siga por [N paradas]
+- Nome das paradas intermediárias relevantes
+- ⚠️ Alerta antecipado — "prepare-se, faltam 2 paradas"
+- ⚠️ DESEMBARQUE em [Terminal/Parada X]
+
+**PASSO 5 — BALDEAÇÃO (se necessário)**
+- 🔄 No Terminal Central:
+- Tempo disponível para a baldeação
+- Localização da plataforma dentro do terminal
+- 📍 Vá até a plataforma [X]
+- 🚌 Pegue a linha [000] — horário [HH:MM]
+- O que fazer se perder o horário
+- 🔢 Siga por [N paradas]
+
+**PASSO 6 — DESTINO FINAL**
+- 🚶 Desembarque em [Parada X]
+- Referência visual do ponto de desembarque
+- 🚶 Siga pela [direita/esquerda]
+- 📍 Caminhe [N metros]
+- ✅ Você chegou ao seu destino!
+
+---
+
+### 12.2 Requisitos Técnicos por Passo
+
+| Passo | Dados necessários | Fonte |
+|---|---|---|
+| Origem | GPS + geocoding | Geolocator + Geocoding |
+| A pé até ponto | Rota pedestre + POIs | OpenStreetMap / Google Maps |
+| Embarque | Horários + plataforma | API RioPretrans / GTFS |
+| Durante viagem | GPS em tempo real + paradas | GPS + GTFS |
+| Baldeação | Mapa do terminal + horários | Dados RioPretrans |
+| Destino final | Rota pedestre + POIs | OpenStreetMap / Google Maps |
+
+---
+
+### 12.3 Funcionalidades de Acessibilidade por Passo
+
+| Passo | Recurso |
+|---|---|
+| Todos | TTS — leitura em voz alta |
+| A pé | Vibração a cada curva |
+| Embarque | Alerta sonoro ao chegar o ônibus |
+| Viagem | Vibração + som ao aproximar da parada |
+| Destino | Vibração + voz "Você chegou!" |
+
+---
+
+### 12.4 Tratamento de Intercorrências
+
+- Ônibus atrasado → recalcular tempo de espera
+- Desvio de rota → notificar e recalcular
+- Perda de baldeação → sugerir próxima alternativa
+- GPS perdido → usar última posição conhecida
+- Sem internet → modo offline com dados em cache
+
+> 📌 Registrado em: 21/04/2026
+> Origem: definição de produto — fluxo completo de navegação
