@@ -476,3 +476,16 @@ Situações que afetam a contagem de paradas e roteirização:
 
 > 📌 Registrado em: 21/04/2026
 > Origem: definição de produto — fluxo completo de navegação
+
+### 12.5 Referências Visuais — Google Places API
+
+- Google Places Photos — fotos reais dos pontos de ônibus
+- Google Street View — imagem da rua no ponto de embarque
+- Places Nearby — estabelecimentos próximos como referência
+- User-contributed photos — fotos enviadas por usuários
+
+**Impacto:** substitui descrições abstratas por referências
+visuais reais, aumentando confiança do usuário no trajeto.
+
+> Requer: Google Places API key
+> Custo: gratuito até 5.000 requisições/mês
