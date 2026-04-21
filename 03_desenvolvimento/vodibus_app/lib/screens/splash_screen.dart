@@ -13,7 +13,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -25,58 +25,45 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.verdeAzulado,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.directions_bus,
-              size: 100,
-              color: AppColors.azulEscuro,
-            ),
-            const SizedBox(height: 24),
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 56,
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
-                  letterSpacing: -1.5,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Imagem ocupando tela toda
+          Image.asset(
+            'assets/images/vodibus-for-cell.png',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+
+          // Loading sobreposto na parte inferior
+          Positioned(
+            bottom: 48,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                const CircularProgressIndicator(
+                  color: AppColors.amarelo,
+                  strokeWidth: 3,
                 ),
-                children: [
-                  TextSpan(
-                    text: 'Vo',
-                    style: TextStyle(color: AppColors.azulEscuro),
+                const SizedBox(height: 16),
+                Text(
+                  'Carregando...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    // ignore: deprecated_member_use
+                    color: Colors.white.withOpacity(0.9),
+                    fontWeight: FontWeight.w500,
+                    shadows: const [
+                      Shadow(color: Colors.black54, blurRadius: 4),
+                    ],
                   ),
-                  TextSpan(
-                    text: 'Di',
-                    style: TextStyle(color: AppColors.amarelo),
-                  ),
-                  TextSpan(
-                    text: 'Bus',
-                    style: TextStyle(color: AppColors.azulEscuro),
-                  ),
-                  TextSpan(
-                    text: '!',
-                    style: TextStyle(color: AppColors.azulMedio),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Ônibus na palma da mão — simples assim!',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.cinzaTexto,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(color: AppColors.amarelo),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
