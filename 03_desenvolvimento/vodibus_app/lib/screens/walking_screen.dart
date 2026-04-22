@@ -3,19 +3,34 @@ import 'package:vodibus_app/theme/app_colors.dart';
 
 class WalkingScreen extends StatelessWidget {
   final String destino;
+  final double? distanciaMetros;
+  final int? tempoMinutos;
+  final List<Map<String, String>>? instrucoes;
 
-  const WalkingScreen({super.key, required this.destino});
+  const WalkingScreen({
+    super.key,
+    required this.destino,
+    this.distanciaMetros,
+    this.tempoMinutos,
+    this.instrucoes,
+  });
 
-  final List<Map<String, String>> _instrucoes = const [
-    {'icone': '↑', 'texto': 'Siga em frente pela rua principal'},
+  List<Map<String, String>> get _instrucoesPadrao => [
+    {'icone': '↑', 'texto': 'Saia em frente pela calçada'},
     {'icone': '→', 'texto': 'Vire à direita na próxima esquina'},
-    {'icone': '↑', 'texto': 'Ande 200 metros até o semáforo'},
-    {'icone': '←', 'texto': 'Vire à esquerda na Rua Voluntários'},
-    {'icone': '📍', 'texto': 'O ponto está à sua frente'},
+    {'icone': '↑', 'texto': 'Siga em frente por 200 metros'},
+    {'icone': '←', 'texto': 'Vire à esquerda — o ponto está à sua frente'},
+    {'icone': '📍', 'texto': 'Aguarde o ônibus neste ponto'},
   ];
 
   @override
   Widget build(BuildContext context) {
+    final listaInstrucoes = instrucoes ?? _instrucoesPadrao;
+    final distancia = distanciaMetros != null
+        ? '${distanciaMetros!.round()}m'
+        : '~400m';
+    final tempo = tempoMinutos ?? 5;
+
     return Scaffold(
       backgroundColor: AppColors.cinzaFundo,
       appBar: AppBar(
@@ -56,8 +71,8 @@ class WalkingScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Seu destino',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                        'Ponto de embarque',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
                       ),
                       Text(
                         destino,
@@ -74,57 +89,36 @@ class WalkingScreen extends StatelessWidget {
             ),
           ),
 
-          // Tempo estimado
+          // Tempo e distância
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             color: AppColors.verdeAzulado,
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Column(
-                  children: [
-                    Text(
-                      '5 min',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.azulEscuro,
-                      ),
-                    ),
-                    Text(
-                      'a pé',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.cinzaTexto,
-                      ),
-                    ),
-                  ],
+                _itemResumo(
+                  icone: Icons.timer,
+                  valor: '$tempo min',
+                  label: 'a pé',
                 ),
-                Column(
-                  children: [
-                    Text(
-                      '400m',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.azulEscuro,
-                      ),
-                    ),
-                    Text(
-                      'distância',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.cinzaTexto,
-                      ),
-                    ),
-                  ],
+                Container(width: 1, height: 40, color: AppColors.cinzaClaro),
+                _itemResumo(
+                  icone: Icons.straighten,
+                  valor: distancia,
+                  label: 'distância',
+                ),
+                Container(width: 1, height: 40, color: AppColors.cinzaClaro),
+                _itemResumo(
+                  icone: Icons.directions_walk,
+                  valor: 'Devagar',
+                  label: 'ritmo',
                 ),
               ],
             ),
           ),
 
-          // Instruções
+          // Instrucoes
           const Padding(
             padding: EdgeInsets.all(16),
             child: Row(
@@ -132,7 +126,7 @@ class WalkingScreen extends StatelessWidget {
                 Icon(Icons.directions_walk, color: AppColors.azulMedio),
                 SizedBox(width: 8),
                 Text(
-                  'Instruções',
+                  'Passo a passo',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -142,57 +136,121 @@ class WalkingScreen extends StatelessWidget {
               ],
             ),
           ),
+
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _instrucoes.length,
+              itemCount: listaInstrucoes.length,
               itemBuilder: (context, index) {
-                final instrucao = _instrucoes[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.branco,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.azulEscuro,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
-                          child: Text(
-                            instrucao['icone']!,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              color: AppColors.branco,
+                final instrucao = listaInstrucoes[index];
+                final ultimo = index == listaInstrucoes.length - 1;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Linha do tempo
+                    Column(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: ultimo
+                                ? AppColors.verde
+                                : AppColors.azulEscuro,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              instrucao['icone']!,
+                              style: const TextStyle(fontSize: 18),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+                        if (!ultimo)
+                          Container(
+                            width: 2,
+                            height: 40,
+                            color: AppColors.cinzaClaro,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16, top: 8),
                         child: Text(
                           instrucao['texto']!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textoPrincipal,
+                            fontWeight: ultimo
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: ultimo
+                                ? AppColors.verde
+                                : AppColors.textoPrincipal,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
           ),
+
+          // Botão iniciar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.verde,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                icon: const Icon(Icons.check_circle, color: AppColors.branco),
+                label: const Text(
+                  'Entendido — vou ao ponto!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.branco,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _itemResumo({
+    required IconData icone,
+    required String valor,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Icon(icone, color: AppColors.azulEscuro, size: 22),
+        const SizedBox(height: 4),
+        Text(
+          valor,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.azulEscuro,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: AppColors.cinzaTexto),
+        ),
+      ],
     );
   }
 }
