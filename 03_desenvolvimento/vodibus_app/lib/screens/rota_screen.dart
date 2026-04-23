@@ -234,6 +234,9 @@ class _RotaScreenState extends State<RotaScreen> {
                                 destino: rota.paradaEmbarque.stopName,
                                 distanciaMetros: rota.distanciaApeKm * 1000,
                                 tempoMinutos: rota.tempoApeMin,
+                                numeroLinha: rota.linha.routeShortName,
+                                nomeLinha: rota.linha.routeLongName,
+                                horarioOnibus: rota.proximoHorario,
                               ),
                             ),
                           );

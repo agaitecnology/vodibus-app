@@ -6,6 +6,9 @@ class WalkingScreen extends StatelessWidget {
   final double? distanciaMetros;
   final int? tempoMinutos;
   final List<Map<String, String>>? instrucoes;
+  final String? numeroLinha;
+  final String? nomeLinha;
+  final String? horarioOnibus;
 
   const WalkingScreen({
     super.key,
@@ -13,14 +16,17 @@ class WalkingScreen extends StatelessWidget {
     this.distanciaMetros,
     this.tempoMinutos,
     this.instrucoes,
+    this.numeroLinha,
+    this.nomeLinha,
+    this.horarioOnibus,
   });
 
   List<Map<String, String>> get _instrucoesPadrao => [
-    {'icone': '↑', 'texto': 'Saia em frente pela calçada'},
-    {'icone': '→', 'texto': 'Vire à direita na próxima esquina'},
-    {'icone': '↑', 'texto': 'Siga em frente por 200 metros'},
-    {'icone': '←', 'texto': 'Vire à esquerda — o ponto está à sua frente'},
-    {'icone': '📍', 'texto': 'Aguarde o ônibus neste ponto'},
+    {'icone': '↑', 'texto': 'Vá até a calçada'},
+    {'icone': '→', 'texto': 'Vire à direita'},
+    {'icone': '↑', 'texto': 'Caminhe em frente'},
+    {'icone': '🚦', 'texto': 'Atravesse a rua com cuidado'},
+    {'icone': '📍', 'texto': 'O ponto está à sua frente'},
   ];
 
   @override
@@ -140,14 +146,19 @@ class WalkingScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: listaInstrucoes.length,
+              itemCount: listaInstrucoes.length + 1,
               itemBuilder: (context, index) {
+                // Último item — card do ônibus
+                if (index == listaInstrucoes.length) {
+                  return _cardOnibus();
+                }
+
                 final instrucao = listaInstrucoes[index];
                 final ultimo = index == listaInstrucoes.length - 1;
+
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Linha do tempo
                     Column(
                       children: [
                         Container(
@@ -166,12 +177,11 @@ class WalkingScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (!ultimo)
-                          Container(
-                            width: 2,
-                            height: 40,
-                            color: AppColors.cinzaClaro,
-                          ),
+                        Container(
+                          width: 2,
+                          height: 40,
+                          color: AppColors.cinzaClaro,
+                        ),
                       ],
                     ),
                     const SizedBox(width: 16),
@@ -198,7 +208,7 @@ class WalkingScreen extends StatelessWidget {
             ),
           ),
 
-          // Botão iniciar
+          // Botão
           Padding(
             padding: const EdgeInsets.all(16),
             child: SizedBox(
@@ -224,6 +234,77 @@ class WalkingScreen extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardOnibus() {
+    if (numeroLinha == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, left: 56),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.azulEscuro,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🚌 Aguarde neste ponto:',
+            style: TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.amarelo,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  numeroLinha!,
+                  style: const TextStyle(
+                    color: AppColors.azulEscuro,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  nomeLinha ?? '',
+                  style: const TextStyle(
+                    color: AppColors.branco,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (horarioOnibus != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  '🕐 $horarioOnibus',
+                  style: const TextStyle(
+                    color: AppColors.amarelo,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
