@@ -68,6 +68,7 @@ flutter:
     - assets/images/vodibus_arte-final.png
     - assets/images/vodibus-for-cell.png
     - assets/images/marca_colorida.png
+    - assets/images/img_app.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

@@ -13,7 +13,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 6), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           // Imagem ocupando tela toda
           Image.asset(
-            'assets/images/vodibus-for-cell.png',
+            'assets/images/img_app.png',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
